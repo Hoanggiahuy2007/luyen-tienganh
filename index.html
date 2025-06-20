@@ -1652,7 +1652,7 @@
       }).then(() => {
         document.getElementById("output").innerHTML = `✅ Phòng đã tạo! Room ID: <b>${roomId}</b>`;
       }).catch((error) => {
-        document.getElementById("output").innerText = "❌ Lỗi tạo phòng: " + error;
+        document.getElementById("output").innerText = "❌ Lỗi tạo phòng: " + error.message;
       });
     }
 
