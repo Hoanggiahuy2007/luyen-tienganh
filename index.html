@@ -1432,27 +1432,38 @@
       document.getElementById("timer").textContent = ""; // Xóa timer
     }
 
+    window.speechSynthesis.onvoiceschanged = () => {
+  // Lúc này speechSynthesis.getVoices() mới có đủ giọng
+  console.log("Voice list loaded:", speechSynthesis.getVoices());
+};
+
+
     function speakWord(text) {
-      // Hủy giọng đọc đang chạy trước khi phát cái mới
-      if (speechSynthesis.speaking || speechSynthesis.pending) {
-        speechSynthesis.cancel();
-      }
+  // Hủy giọng đọc đang chạy trước khi phát cái mới
+  if (speechSynthesis.speaking || speechSynthesis.pending) {
+    speechSynthesis.cancel();
+  }
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      speechSynthesis.speak(utterance);
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(voice =>
-        voice.lang === "en-GB" && voice.name.includes("Female")
-      );
+  const utterance = new SpeechSynthesisUtterance(text);
 
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
-      }
+  // Lấy danh sách voice
+  const voices = window.speechSynthesis.getVoices();
 
-      utterance.rate = 0.9; // tốc độ chậm hơn một chút
-      speechSynthesis.speak(utterance);
+  // Chọn giọng nữ tiếng Anh - Anh (hoặc bạn có thể đổi "Karen", "Daniel", "Samantha" tuỳ iPhone đã tải)
+  const preferredVoice = voices.find(voice =>
+    voice.lang === "en-GB" && voice.name.includes("Karen")
+  );
 
-    }
+  if (preferredVoice) {
+    utterance.voice = preferredVoice;
+  }
+
+  utterance.rate = 0.9; // tốc độ chậm hơn
+  utterance.pitch = 1.0;
+
+  // ✅ Phát sau khi đã gán giọng
+  speechSynthesis.speak(utterance);
+}
 
 
     function startAdvancedSpelling() {
