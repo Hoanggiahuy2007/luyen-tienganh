@@ -5,8 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Luyện từ vựng tiếng Anh</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -305,19 +305,12 @@
   </div>
 
   <button onclick="removeDuplicateWordsByEnOrPhonetic()">🧹 Xoá từ trùng </button>
-  <h2>🔥 Luyện từ vựng + Chơi cùng bạn 🔗</h2>
-  <div>
-    <input id="playerName" placeholder="Tên của bạn" />
-    <input id="roomCode" placeholder="Mã phòng (4 ký tự)" />
-    <button onclick="createRoom()">🎮 Tạo phòng</button>
-    <button onclick="joinRoom()">🔗 Vào phòng</button>
+  <div id="multiplayer">
+    <h2>Chơi cùng bạn bè</h2>
+    <button onclick="createRoom()">Tạo phòng</button>
+    <input id="roomCodeInput" placeholder="Nhập mã phòng...">
+    <button onclick="joinRoom()">Vào phòng</button>
     <p id="roomStatus"></p>
-  </div>
-
-  <div id="gameArea" class="hidden">
-    <h3 id="questionText"></h3>
-    <ul id="options"></ul>
-    <p id="feedback"></p>
   </div>
 
   <script>
@@ -1610,14 +1603,17 @@
 
 
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyCtEbAdg7rwTey5bNK9yRyfXX5dDzUvB7o",
+      authDomain: "vocab-trainer-ea3a1.firebaseapp.com",
+      databaseURL: "https://vocab-trainer-ea3a1-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "vocab-trainer-ea3a1",
+      storageBucket: "vocab-trainer-ea3a1.appspot.com",
+      messagingSenderId: "458196864619",
+      appId: "1:458196864619:web:af664fb18f482f2a2262ce"
     };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
     function playSound(correct) {
       const audio = new Audio(correct ? 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_0b83a5b63d.mp3' : 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_38c7cc84f7.mp3');
@@ -1647,19 +1643,17 @@
 
 
     function createRoom() {
-      name = document.getElementById("playerName").value.trim();
-      room = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const words = getCustomWords();
-      if (!name || words.length === 0) return alert("Tên + từ vựng phải có!");
+      const roomId = Math.random().toString(36).substring(2, 8);
+      const roomRef = database.ref("rooms/" + roomId);
 
-      db.ref("rooms/" + room).set({
-        players: { [name]: true },
-        question: randomQuestion(words)
+      roomRef.set({
+        members: [],
+        vocabulary: []
+      }).then(() => {
+        document.getElementById("output").innerHTML = `✅ Phòng đã tạo! Room ID: <b>${roomId}</b>`;
+      }).catch((error) => {
+        document.getElementById("output").innerText = "❌ Lỗi tạo phòng: " + error;
       });
-
-      document.getElementById("roomStatus").textContent = `Đã tạo phòng: ${room}`;
-      document.getElementById("gameArea").classList.remove("hidden");
-      listenQuestion();
     }
 
     function joinRoom() {
@@ -2291,6 +2285,53 @@
       location.reload();
     }
 
+
+    function generateRoomCode() {
+      return Math.random().toString(36).substring(2, 7).toUpperCase(); // ví dụ: "A1C9F"
+    }
+
+    function createRoom() {
+      const code = generateRoomCode();
+      const roomRef = firebase.database().ref("rooms/" + code);
+      const roomData = {
+        questionIndex: 0,
+        players: 1,
+        timestamp: Date.now(),
+      };
+      roomRef.set(roomData);
+      document.getElementById("roomStatus").textContent = "Đã tạo phòng: " + code;
+    }
+
+    function joinRoom() {
+      const code = document.getElementById("roomCodeInput").value.trim().toUpperCase();
+      const roomRef = firebase.database().ref("rooms/" + code);
+      roomRef.get().then((snapshot) => {
+        if (snapshot.exists()) {
+          roomRef.child("players").transaction(n => (n || 0) + 1);
+          document.getElementById("roomStatus").textContent = "Vào phòng thành công: " + code;
+          // tiếp tục xử lý đồng bộ câu hỏi
+        } else {
+          document.getElementById("roomStatus").textContent = "Không tìm thấy phòng!";
+        }
+      });
+    }
+
+    function setQuestion(roomCode, questionIndex) {
+      const roomRef = firebase.database().ref("rooms/" + roomCode);
+      roomRef.update({ questionIndex });
+    }
+
+
+    function listenForQuestion(roomCode) {
+      const roomRef = firebase.database().ref("rooms/" + roomCode + "/questionIndex");
+      roomRef.on("value", (snapshot) => {
+        const index = snapshot.val();
+        if (index !== null) {
+          // Hiển thị câu hỏi tương ứng từ danh sách words[index]
+          displayQuestion(index);
+        }
+      });
+    }
 
   </script>
 </body>
