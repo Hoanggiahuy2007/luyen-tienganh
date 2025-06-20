@@ -69,11 +69,59 @@
       border-radius: 8px;
       border: 1px solid #ccc;
     }
+
+    #search-container {
+      max-width: 800px;
+      /* 👈 Giới hạn chiều rộng */
+      width: 100%;
+      /* 👈 Chiếm toàn bộ trong khung cho phép */
+      margin: 0 auto;
+      /* 👈 Căn giữa */
+    }
+
+    #searchInput {
+      width: 100%;
+      /* 👈 Chiếm toàn bộ trong #search-container */
+      padding: 8px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    #searchResults {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 300px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      width: 100%;
+      /* 👈 Chiếm đúng chiều rộng khung */
+      box-sizing: border-box;
+    }
+
+    #searchResults li {
+      padding: 6px 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    #searchResults li:hover {
+      background-color: #f1f1f1;
+    }
   </style>
 </head>
 
 <body>
   <h1>Luyện Từ Vựng Tiếng Anh</h1>
+  <div id="search-container">
+    <input type="text" id="searchInput" placeholder="🔍 Nhập từ..." oninput="searchWord()" />
+    <ul id="searchResults"></ul>
+  </div>
   <div class="card">
     <div class="word" id="word">Loading...</div>
     <div class="phonetic" id="phonetic"></div>
@@ -1393,6 +1441,48 @@
     let spellingTimer;
 
 
+    function highlightMatch(text, keyword) {
+      const regex = new RegExp(`(${keyword})`, "gi");
+      return text.replace(regex, "<mark>$1</mark>");
+    }
+
+    function searchWord() {
+      const input = document.getElementById("searchInput").value.trim().toLowerCase();
+      const resultsContainer = document.getElementById("searchResults");
+      resultsContainer.innerHTML = "";
+
+      if (!input) return;
+
+      const results = words.filter(word =>
+        word.en.toLowerCase().includes(input) ||
+        word.vi.toLowerCase().includes(input)
+      );
+
+      const topResults = results.slice(0, 20); // Giới hạn 20 kết quả
+
+      if (topResults.length === 0) {
+        resultsContainer.innerHTML = "<li>❌ Không tìm thấy từ phù hợp.</li>";
+        return;
+      }
+
+      topResults.forEach((word) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+      <strong>${highlightMatch(word.en, input)}</strong>
+      (${word.phonetic || ""}): ${highlightMatch(word.vi, input)}
+    `;
+        li.style.cursor = "pointer";
+        li.style.padding = "6px 10px";
+        li.style.borderBottom = "1px solid #ddd";
+        li.onclick = () => {
+          currentIndex = words.indexOf(word); // Gán lại index để dùng với displayWord
+          displayWord();
+        };
+        resultsContainer.appendChild(li);
+      });
+    }
+
+
     function shuffleWords(array) {
       const copy = [...array];
       for (let i = copy.length - 1; i > 0; i--) {
@@ -1433,37 +1523,37 @@
     }
 
     window.speechSynthesis.onvoiceschanged = () => {
-  // Lúc này speechSynthesis.getVoices() mới có đủ giọng
-  console.log("Voice list loaded:", speechSynthesis.getVoices());
-};
+      // Lúc này speechSynthesis.getVoices() mới có đủ giọng
+      console.log("Voice list loaded:", speechSynthesis.getVoices());
+    };
 
 
     function speakWord(text) {
-  // Hủy giọng đọc đang chạy trước khi phát cái mới
-  if (speechSynthesis.speaking || speechSynthesis.pending) {
-    speechSynthesis.cancel();
-  }
+      // Hủy giọng đọc đang chạy trước khi phát cái mới
+      if (speechSynthesis.speaking || speechSynthesis.pending) {
+        speechSynthesis.cancel();
+      }
 
-  const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(text);
 
-  // Lấy danh sách voice
-  const voices = window.speechSynthesis.getVoices();
+      // Lấy danh sách voice
+      const voices = window.speechSynthesis.getVoices();
 
-  // Chọn giọng nữ tiếng Anh - Anh (hoặc bạn có thể đổi "Karen", "Daniel", "Samantha" tuỳ iPhone đã tải)
-  const preferredVoice = voices.find(voice =>
-    voice.lang === "en-GB" && voice.name.includes("Daniel")
-  );
+      // Chọn giọng nữ tiếng Anh - Anh (hoặc bạn có thể đổi "Karen", "Daniel", "Samantha" tuỳ iPhone đã tải)
+      const preferredVoice = voices.find(voice =>
+        voice.lang === "en-GB" && voice.name.includes("Daniel")
+      );
 
-  if (preferredVoice) {
-    utterance.voice = preferredVoice;
-  }
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
 
-  utterance.rate = 0.9; // tốc độ chậm hơn
-  utterance.pitch = 1.0;
+      utterance.rate = 0.9; // tốc độ chậm hơn
+      utterance.pitch = 1.0;
 
-  // ✅ Phát sau khi đã gán giọng
-  speechSynthesis.speak(utterance);
-}
+      // ✅ Phát sau khi đã gán giọng
+      speechSynthesis.speak(utterance);
+    }
 
 
     function startAdvancedSpelling() {
