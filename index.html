@@ -229,18 +229,18 @@
 
 
   <div id="add-word-form" style="margin-top: 20px;">
-    <h3>Thêm từ mới</h3>
+    <h3>➕ Thêm từ mới</h3>
     <input type="text" id="new-en" placeholder="Từ tiếng Anh" />
     <input type="text" id="new-vi" placeholder="Nghĩa tiếng Việt" />
     <input type="text" id="new-phonetic" placeholder="Phiên âm (tùy chọn)" />
-    <button onclick="addNewWord()">➕ Thêm từ mới</button>
+    <button onclick="addNewWord()">Thêm từ</button>
   </div>
 
   <button onclick="cleanInvalidWords()">Xóa từ không hợp lệ</button>
 
   <script>
 
-    let defaultWords = [];
+    let words = [];
 
     const storedCustomWords = localStorage.getItem("customWords");
     if (storedCustomWords) {
@@ -1524,32 +1524,32 @@
     let spellingScore = 0;
     let spellingTimer;
     let quizIndex = 0;
-    let customWords = JSON.parse(localStorage.getItem("customWords")) || [];
+    let userWords = JSON.parse(localStorage.getItem("userWords")) || [];
 
 
     function addNewWord(en, vi, phonetic) {
-      const newWord = { en, vi, phonetic };
-      userWords.push(newWord);
-      localStorage.setItem("userWords", JSON.stringify(userWords));
-    }
+  const newWord = { en, vi, phonetic };
+  userWords.push(newWord);
+  localStorage.setItem("userWords", JSON.stringify(userWords));
+}
 
-    function isValidEnglishWord(word) {
-      return /^[a-zA-Z]+(?:[-'][a-zA-Z]+)*$/.test(word);
-    }
+  function isValidEnglishWord(word) {
+  return /^[a-zA-Z]+(?:[-'][a-zA-Z]+)*$/.test(word);
+}
 
-    function displayUserWords() {
-      const container = document.getElementById("user-word-list");
-      container.innerHTML = "";
+function displayUserWords() {
+  const container = document.getElementById("user-word-list");
+  container.innerHTML = "";
 
-      userWords.forEach((word, index) => {
-        const div = document.createElement("div");
-        div.innerHTML = `
+  userWords.forEach((word, index) => {
+    const div = document.createElement("div");
+    div.innerHTML = `
       <strong>${word.en}</strong> (${word.phonetic}): ${word.vi}
       <button onclick="deleteUserWord(${index})">❌ Xoá</button>
     `;
-        container.appendChild(div);
-      });
-    }
+    container.appendChild(div);
+  });
+}
 
     function startQuiz() {
       document.getElementById("quiz-section").style.display = "block";
@@ -1743,16 +1743,6 @@
         document.getElementById("quiz-options").innerHTML = "";
         document.getElementById("quiz-action-buttons").style.display = "none";
         return;
-      }
-
-      function resetProgress() {
-        localStorage.removeItem("progress");
-        localStorage.removeItem("wrongWords");
-        localStorage.removeItem("shuffledSpellingWords");
-        localStorage.removeItem("spellingCount");
-        localStorage.removeItem("spellingScore");
-        localStorage.removeItem("quizHistory");
-        location.reload();
       }
 
       const correctWord = quizWords.shift();
@@ -2002,22 +1992,22 @@
     }
 
     function cleanInvalidWords() {
-      const stored = localStorage.getItem("customWords");
-      if (!stored) {
-        alert("Không có từ nào để kiểm tra.");
-        return;
-      }
+  const stored = localStorage.getItem("customWords");
+  if (!stored) {
+    alert("Không có từ nào để kiểm tra.");
+    return;
+  }
 
-      let words = JSON.parse(stored);
+  let words = JSON.parse(stored);
 
-      // Giữ lại chỉ những từ có thuộc tính 'en' hợp lệ
-      const validWords = words.filter(word => isValidEnglishWord(word.en));
+  // Giữ lại chỉ những từ có thuộc tính 'en' hợp lệ
+  const validWords = words.filter(word => isValidEnglishWord(word.en));
 
-      // Cập nhật lại localStorage
-      localStorage.setItem("customWords", JSON.stringify(validWords));
+  // Cập nhật lại localStorage
+  localStorage.setItem("customWords", JSON.stringify(validWords));
 
-      alert(`Đã xóa ${words.length - validWords.length} từ không hợp lệ.`);
-    }
+  alert(`Đã xóa ${words.length - validWords.length} từ không hợp lệ.`);
+}
 
     function clearProgress() {
       localStorage.removeItem("incorrectWords");
@@ -2028,40 +2018,27 @@
     }
 
     function addNewWord() {
-  const enInput = document.getElementById("newEn");
-  const viInput = document.getElementById("newVi");
-  const phoneticInput = document.getElementById("newPhonetic");
+      const en = document.getElementById("new-en").value.trim();
+      const vi = document.getElementById("new-vi").value.trim();
+      const phonetic = document.getElementById("new-phonetic").value.trim();
 
-  const en = enInput.value.trim().toLowerCase();
-  const vi = viInput.value.trim();
-  const phonetic = phoneticInput.value.trim();
+      if (!en || !vi) {
+        alert("⚠️ Vui lòng nhập đầy đủ từ tiếng Anh và nghĩa tiếng Việt.");
+        return;
+      }
 
-  if (!en || !vi) {
-    alert("❗ Vui lòng nhập đầy đủ từ tiếng Anh và nghĩa tiếng Việt.");
-    return;
-  }
+      const newWord = { en, vi, phonetic };
+      words.push(newWord);
 
-  const allWords = [...defaultWords, ...customWords];
-  const isDuplicate = allWords.some(word => word.en.toLowerCase() === en);
+      // ✅ Lưu vào localStorage
+      localStorage.setItem("customWords", JSON.stringify(words));
 
-  if (isDuplicate) {
-    alert("⚠️ Từ này đã có trong danh sách!");
-    return;
-  }
-
-  const newWord = { en, vi, phonetic };
-  customWords.push(newWord);
-  localStorage.setItem("customWords", JSON.stringify(customWords));
-  alert("✅ Đã thêm từ mới thành công!");
-
-  // Xóa nội dung trong ô nhập
-  enInput.value = "";
-  viInput.value = "";
-  phoneticInput.value = "";
-
-  showCustomWords(); // cập nhật lại giao diện hiển thị từ đã thêm
-}
-
+      alert("✅ Đã thêm từ mới thành công!");
+      document.getElementById("new-en").value = "";
+      document.getElementById("new-vi").value = "";
+      document.getElementById("new-phonetic").value = "";
+      displayWord(); // cập nhật từ đang hiển thị
+    }
 
   </script>
 </body>
