@@ -5,8 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Luyện từ vựng tiếng Anh</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -156,69 +156,6 @@
       background-color: #d0ebff;
       transform: scale(1.02);
     }
-
-    #gameArea {
-      margin: 40px auto;
-      background: white;
-      border-radius: 12px;
-      padding: 20px 30px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 500px;
-      font-family: 'Inter', sans-serif;
-      text-align: center;
-    }
-
-    #questionText {
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: #102a43;
-      margin-bottom: 20px;
-    }
-
-    #options {
-      padding: 0;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    #options li {
-      background-color: #f0f4f8;
-      border: 1px solid #d9e2ec;
-      border-radius: 8px;
-      padding: 10px 15px;
-      margin: 8px 0;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-      width: 100%;
-      max-width: 300px;
-    }
-
-    #options li:hover {
-      background-color: #dbeafe;
-      transform: scale(1.02);
-    }
-
-    #options li.correct {
-      background-color: #d1fae5 !important;
-      border-color: #10b981 !important;
-      color: #065f46;
-    }
-
-    #options li.wrong {
-      background-color: #fee2e2 !important;
-      border-color: #ef4444 !important;
-      color: #991b1b;
-    }
-
-    #feedback {
-      margin-top: 15px;
-      font-weight: 500;
-      font-size: 1.1rem;
-      color: #334e68;
-    }
   </style>
 </head>
 
@@ -305,13 +242,6 @@
   </div>
 
   <button onclick="removeDuplicateWordsByEnOrPhonetic()">🧹 Xoá từ trùng </button>
-  <div id="multiplayer">
-    <h2>Chơi cùng bạn bè</h2>
-    <button onclick="createRoom()">Tạo phòng</button>
-    <input id="roomCodeInput" placeholder="Nhập mã phòng...">
-    <button onclick="joinRoom()">Vào phòng</button>
-    <p id="roomStatus"></p>
-  </div>
 
   <script>
 
@@ -1602,24 +1532,6 @@
     let userWords = JSON.parse(localStorage.getItem("userWords")) || [];
 
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCtEbAdg7rwTey5bNK9yRyfXX5dDzUvB7o",
-      authDomain: "vocab-trainer-ea3a1.firebaseapp.com",
-      databaseURL: "https://vocab-trainer-ea3a1-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "vocab-trainer-ea3a1",
-      storageBucket: "vocab-trainer-ea3a1.appspot.com",
-      messagingSenderId: "458196864619",
-      appId: "1:458196864619:web:af664fb18f482f2a2262ce"
-    };
-
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    function playSound(correct) {
-      const audio = new Audio(correct ? 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_0b83a5b63d.mp3' : 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_38c7cc84f7.mp3');
-      audio.play();
-    }
-
     function showAnswerFeedback(selectedLi, isCorrect) {
       if (isCorrect) {
         selectedLi.classList.add('correct');
@@ -1630,43 +1542,6 @@
       }
     }
 
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    let room = "";
-    let name = "";
-
-    const getCustomWords = () => {
-      return JSON.parse(localStorage.getItem("customWords")) || [];
-    };
-
-
-    function createRoom() {
-      const roomId = Math.random().toString(36).substring(2, 8);
-      const roomRef = database.ref("rooms/" + roomId);
-
-      roomRef.set({
-        members: [],
-        vocabulary: []
-      }).then(() => {
-        document.getElementById("output").innerHTML = `✅ Phòng đã tạo! Room ID: <b>${roomId}</b>`;
-      }).catch((error) => {
-        document.getElementById("output").innerText = "❌ Lỗi tạo phòng: " + error.message;
-      });
-    }
-
-    function joinRoom() {
-      name = document.getElementById("playerName").value.trim();
-      room = document.getElementById("roomCode").value.trim().toUpperCase();
-      if (!name || !room) return alert("Nhập đủ tên và mã phòng!");
-
-      db.ref("rooms/" + room + "/players/" + name).set(true);
-
-      document.getElementById("roomStatus").textContent = `Đã vào phòng: ${room}`;
-      document.getElementById("gameArea").classList.remove("hidden");
-      listenQuestion();
-    }
 
     function listenQuestion() {
       db.ref("rooms/" + room + "/question").on("value", snap => {
@@ -2285,53 +2160,6 @@
       location.reload();
     }
 
-
-    function generateRoomCode() {
-      return Math.random().toString(36).substring(2, 7).toUpperCase(); // ví dụ: "A1C9F"
-    }
-
-    function createRoom() {
-      const code = generateRoomCode();
-      const roomRef = firebase.database().ref("rooms/" + code);
-      const roomData = {
-        questionIndex: 0,
-        players: 1,
-        timestamp: Date.now(),
-      };
-      roomRef.set(roomData);
-      document.getElementById("roomStatus").textContent = "Đã tạo phòng: " + code;
-    }
-
-    function joinRoom() {
-      const code = document.getElementById("roomCodeInput").value.trim().toUpperCase();
-      const roomRef = firebase.database().ref("rooms/" + code);
-      roomRef.get().then((snapshot) => {
-        if (snapshot.exists()) {
-          roomRef.child("players").transaction(n => (n || 0) + 1);
-          document.getElementById("roomStatus").textContent = "Vào phòng thành công: " + code;
-          // tiếp tục xử lý đồng bộ câu hỏi
-        } else {
-          document.getElementById("roomStatus").textContent = "Không tìm thấy phòng!";
-        }
-      });
-    }
-
-    function setQuestion(roomCode, questionIndex) {
-      const roomRef = firebase.database().ref("rooms/" + roomCode);
-      roomRef.update({ questionIndex });
-    }
-
-
-    function listenForQuestion(roomCode) {
-      const roomRef = firebase.database().ref("rooms/" + roomCode + "/questionIndex");
-      roomRef.on("value", (snapshot) => {
-        const index = snapshot.val();
-        if (index !== null) {
-          // Hiển thị câu hỏi tương ứng từ danh sách words[index]
-          displayQuestion(index);
-        }
-      });
-    }
 
   </script>
 </body>
