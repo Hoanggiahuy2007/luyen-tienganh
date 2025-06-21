@@ -241,7 +241,7 @@
     <button onclick="forceCleanInvalidWords()">🧹 Dọn sạch từ sai định dạng</button>
   </div>
 
-  <button onclick="removeDuplicateWordsByEnOrPhonetic()">🧹 Xoá từ trùng </button>
+  <button onclick="removeDuplicateWordsByEn()">🧹 Xoá từ trùng </button>
 
   <script>
 
@@ -280,7 +280,6 @@
         { en: "guard", vi: "bảo vệ (v)", phonetic: "/ɡɑːd/" },
         { en: "consideration", vi: "sự cân nhắc (n)", phonetic: "/kənˌsɪdəˈreɪʃn/" },
         { en: "compliment", vi: "lời khen (n)", phonetic: "/ˈkɒmplɪmənt/" },
-        { en: "complement ", vi: "bổ sung (n)", phonetic: "/ˈkɒmplɪmənt/" },
         { en: "implement", vi: "thực hiện, triển khai (v); công cụ (n)", phonetic: "/ˈɪmplɪment/" },
         { en: "attribute", vi: "thuộc tính (n)", phonetic: "/ˈæt.rɪ.bjuːt/" },
         { en: "attribute", vi: "quy cho, gán cho (v)", phonetic: "/əˈtrɪb.juːt/" },
@@ -413,6 +412,7 @@
         { en: "call for sb/sth", vi: "kêu gọi ai/cái gì" },
         { en: "be subject to sth", vi: "bị cái gì" },
         { en: "the brink of sth", vi: "bờ vực bì gì" },
+        { en: "complement", vi: "bổ sung (n)", phonetic: "/ˈkɒmplɪmənt/" },
         { en: "be at risk", vi: "gặp rủi ro, gặp nguy hiểm" },
         { en: "mistake sth for sth", vi: "nhầm cái gì với cái gì" },
         { en: "be to blame for sth", vi: "là nguyên nhân gây ra cái gì" },
@@ -2124,42 +2124,30 @@
     }
 
 
-    function removeDuplicateWordsByEnOrPhonetic() {
+    function removeDuplicateWordsByEn() {
       let customWords = JSON.parse(localStorage.getItem("customWords")) || [];
 
       const seenEnglish = new Set();
-      const seenPhonetics = new Set();
-
-      // Danh sách các phiên âm đặc biệt KHÔNG tính là trùng
-      const excludedPhonetics = ["n.v", "p.v", "coll", "idiom"];
-
       const filtered = [];
 
       for (let word of customWords) {
         if (!word || typeof word !== "object") continue;
 
         const en = word.en?.trim().toLowerCase();
-        const phonetic = word.phonetic?.trim().toLowerCase();
-
-        // Nếu từ tiếng Anh đã trùng → bỏ
         if (en && seenEnglish.has(en)) continue;
 
-        // Nếu phiên âm không nằm trong danh sách loại trừ → kiểm tra trùng
-        const isExcluded = excludedPhonetics.includes(phonetic);
-        if (phonetic && !isExcluded && seenPhonetics.has(phonetic)) continue;
-
-        // Lưu lại để kiểm tra trùng sau này
-        if (en) seenEnglish.add(en);
-        if (phonetic && !isExcluded) seenPhonetics.add(phonetic);
-
-        filtered.push(word); // giữ lại từ hợp lệ
+        seenEnglish.add(en);
+        filtered.push(word);
       }
 
       localStorage.setItem("customWords", JSON.stringify(filtered));
-      alert("✅ Đã xoá từ trùng theo en hoặc phiên âm (loại trừ các nhãn như n.v, p.v, coll, idiom).");
+      alert("✅ Đã xoá các từ trùng theo từ tiếng Anh.");
       location.reload();
     }
 
+    document.addEventListener("DOMContentLoaded", function () {
+      // các đoạn khác
+    });
 
   </script>
 </body>
