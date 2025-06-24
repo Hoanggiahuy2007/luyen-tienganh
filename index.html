@@ -245,6 +245,16 @@
 
   <script>
 
+
+    function normalizeText(text) {
+      return text.toLowerCase().replace(/['’]/g, "");
+    }
+
+    function searchWord() {
+      const inputRaw = document.getElementById("searchInput").value.trim();
+      const input = normalizeText(inputRaw);
+    }
+
     const defaultWords = [
       { en: "sustainable", vi: "bền vững (adj)", phonetic: "/səˈsteɪnəbl/" },
       { en: "diverse", vi: "đa dạng (adj)", phonetic: "/daɪˈvɜːs/" },
@@ -955,7 +965,7 @@
       { en: "disillusioned", vi: "vỡ mộng, thất vọng (adj)", phonetic: "/ˌdɪsɪˈluːʒnd/" },
       { en: "triumphant", vi: "đắc thắng (adj)", phonetic: "/traɪˈʌmfənt/" },
       { en: "impersonal", vi: "khách quan (adj)", phonetic: "/ɪmˈpɜːsənl/" },
-      { en: "humiliated", vi: "bẽ mặt, xấu hổ (adj)", phonetic: "/hjuːˈmɪlieɪt/" },
+      { en: "humiliated", vi: "bẽ mặt, xấu hổ (adj)", phonetic: "/hjuːˈmɪlieɪtɪd/" },
       { en: "enthralled", vi: "say mê (adj)", phonetic: "/ɪnˈθrɔːld/" },
       { en: "assertive", vi: "quả quyết (adj)", phonetic: "/əˈsɜːtɪv/" },
       { en: "bully", vi: "kẻ bắt nạt (n)", phonetic: "/ˈbʊli/" },
@@ -1179,7 +1189,7 @@
       { en: "distance", vi: "tạo khoảng cách, ít tham gia, kết nối (n)", phonetic: "/ˈdɪstəns/" },
       { en: "in an attempt to do sth", vi: "trong nỗ lực làm gì", },
       { en: "adhere to sth", vi: "tuân thủ", },
-      { en: "accuse sbof doing sth", vi: "cáo buộc ai làm gì", },
+      { en: "accuse sb of doing sth", vi: "cáo buộc ai làm gì", },
       { en: "given that + clause", vi: "xét tới, vì điều gì", },
       { en: "be susceptible to sth", vi: "dễ bị ảnh hưởng điều gì xấu", },
       { en: "be exposed to sth", vi: "được tiếp xúc với điều gì", },
@@ -1367,7 +1377,7 @@
       { en: "follow in one’s footsteps", vi: "nối nghiệp ai", },
       { en: "pose a risk to sb/sth", vi: "đe dọa đến ai/cái gì", },
       { en: "instil sth into sb", vi: "làm thấm nhuần điều gì trong ai", },
-      { en: "earn one’s trust", vi: "xây dựng lòng tin", },
+      { en: "earn one's trust", vi: "xây dựng lòng tin", },
       { en: "resort to sth", vi: "phải dùng đến cái gì", },
       { en: "do more harm than good", vi: "lợi bất cập hại (gây hại nhiều hơn là mang lại lợi ích)", },
       { en: "be at loggerheads with sb", vi: "bất hòa, mâu thuẫn với ai", phonetic: "/ˈlɒɡəhedz/" },
@@ -1422,7 +1432,7 @@
       { en: "unmoving", vi: "bất động (adj)", phonetic: "/ˌʌnˈmuːvɪŋ/" },
       { en: "unwavering", vi: "không lay chuyển, vững vàng (adj)", phonetic: "/ʌnˈweɪvərɪŋ/" },
       { en: "unforgiving", vi: "không tha thứ (adj)", phonetic: "/ˌʌnfəˈɡɪvɪŋ/" },
-      { en: "unforthcoming", vi: "không sẵn lòng giúp đỡ, cung cấp thông tin (adj)", phonetic: "/ˌʌnfɔːθˈkʌmɪŋ/" },
+      { en: "unforthcoming", vi: "không sẵn lòng giúp đỡ, không cung cấp thông tin (adj)", phonetic: "/ˌʌnfɔːθˈkʌmɪŋ/" },
       { en: "commitment", vi: "sự cam kết, quyết tâm (n)", phonetic: "/kəˈmɪtmənt/" },
       { en: "wisely", vi: "một cách khôn ngoan (adv)", phonetic: "/ˈwaɪzli/" },
       { en: "accidentally", vi: "vô tình (adv)", phonetic: "/ˌæksɪˈdentəli/" },
@@ -1523,17 +1533,6 @@
     let spellingScore = 0;
     let spellingTimer;
     let quizIndex = 0;
-
-
-    function showAnswerFeedback(selectedLi, isCorrect) {
-      if (isCorrect) {
-        selectedLi.classList.add('correct');
-        playSound(true);
-      } else {
-        selectedLi.classList.add('wrong');
-        playSound(false);
-      }
-    }
 
 
     function listenQuestion() {
@@ -1678,19 +1677,22 @@
       return text.replace(regex, "<mark>$1</mark>");
     }
 
+
     function searchWord() {
-      const input = document.getElementById("searchInput").value.trim().toLowerCase();
+      const inputRaw = document.getElementById("searchInput").value.trim();
+      const input = normalizeText(inputRaw); // bỏ dấu '
+
       const resultsContainer = document.getElementById("searchResults");
       resultsContainer.innerHTML = "";
 
       if (!input) return;
 
       const results = words.filter(word =>
-        word.en.toLowerCase().includes(input) ||
-        word.vi.toLowerCase().includes(input)
+        normalizeText(word.en).includes(input) ||
+        normalizeText(word.vi).includes(input)
       );
 
-      const topResults = results.slice(0, 20); // Giới hạn 20 kết quả
+      const topResults = results.slice(0, 20);
 
       if (topResults.length === 0) {
         resultsContainer.innerHTML = "<li>❌ Không tìm thấy từ phù hợp.</li>";
@@ -1700,20 +1702,19 @@
       topResults.forEach((word) => {
         const li = document.createElement("li");
         li.innerHTML = `
-      <strong>${highlightMatch(word.en, input)}</strong>
-      (${word.phonetic || ""}): ${highlightMatch(word.vi, input)}
+      <strong>${highlightMatch(word.en, inputRaw)}</strong>
+      (${word.phonetic || ""}): ${highlightMatch(word.vi, inputRaw)}
     `;
         li.style.cursor = "pointer";
         li.style.padding = "6px 10px";
         li.style.borderBottom = "1px solid #ddd";
         li.onclick = () => {
-          currentIndex = words.indexOf(word); // Gán lại index để dùng với displayWord
+          currentIndex = words.indexOf(word);
           displayWord();
         };
         resultsContainer.appendChild(li);
       });
     }
-
 
     function shuffleWords(array) {
       const copy = [...array];
@@ -1773,6 +1774,20 @@
 
         nextReviewQuiz();
       }
+    }
+
+    function handleQuizClick(selected) {
+      const correct = currentWord.vi;
+      if (selected === correct) {
+        playSound("correct");
+        document.getElementById("quiz-feedback").textContent = "✅ Chính xác!";
+      } else {
+        playSound("wrong");
+        document.getElementById("quiz-feedback").textContent = `❌ Sai! Đúng: ${correct}`;
+        // Gợi ý phát âm lại từ sau khi âm sai
+        setTimeout(() => speakWord(currentWord.en), 800);
+      }
+      document.getElementById("quiz-action-buttons").style.display = "block";
     }
 
     // Trắc nghiệm từ sai
@@ -1952,6 +1967,31 @@
       }, 1000);
     }
 
+
+    function checkSpelling() {
+      const input = document.getElementById("user-input").value.trim().toLowerCase();
+      const word = spellingWords[currentIndex].en.toLowerCase();
+      if (input === word) {
+        playSound("correct");
+        document.getElementById("spelling-result").textContent = "✅ Chính xác!";
+      } else {
+        playSound("wrong");
+        document.getElementById("spelling-result").textContent = `❌ Sai! Đúng: ${word}`;
+      }
+      // Phát âm từ kế tiếp sau 0.8s
+      setTimeout(() => speakWord(word), 800);
+    }
+
+    function checkReview(userInput, correct) {
+      if (userInput.trim().toLowerCase() === correct.toLowerCase()) {
+        playSound("correct");
+      } else {
+        playSound("wrong");
+        speakWord(correct); // phát âm đúng
+      }
+    }
+
+
     function checkSpelling(timeout = false) {
       clearInterval(spellingTimer);
       const userAnswer = document.getElementById("user-input").value.trim().toLowerCase();
@@ -2069,11 +2109,10 @@
         return;
       }
 
-      if (!/^[a-zA-Z\s\-.,/]+$/.test(en)) {
+      if (!/^[a-zA-Z\s\-.,/'’]+$/.test(en)) {
         alert("❗ Từ chỉ được chứa chữ cái, dấu cách, -, /, dấu phẩy hoặc dấu chấm.");
         return;
       }
-
 
       const allWords = [...words]; // `words` là danh sách tổng hợp từ mặc định + đã thêm
       const isDuplicate = allWords.some(word => word.en.toLowerCase() === en);
@@ -2094,6 +2133,8 @@
       phoneticInput.value = "";
       showCustomWords(); // Gọi lại để hiển thị danh sách mới
     }
+
+
     function forceCleanInvalidWords() {
       let customWords = JSON.parse(localStorage.getItem("customWords")) || [];
 
@@ -2117,6 +2158,7 @@
     }
 
 
+
     function removeDuplicateWordsByEn() {
       let customWords = JSON.parse(localStorage.getItem("customWords")) || [];
 
@@ -2133,6 +2175,7 @@
         filtered.push(word);
       }
 
+
       localStorage.setItem("customWords", JSON.stringify(filtered));
       alert("✅ Đã xoá các từ trùng theo từ tiếng Anh.");
       location.reload();
@@ -2141,6 +2184,25 @@
     document.addEventListener("DOMContentLoaded", function () {
       // các đoạn khác
     });
+
+
+    function playSound(type) {
+      const el = document.getElementById(
+        type === "correct" ? "sound-correct" : "sound-wrong"
+      );
+      if (el) {
+        el.currentTime = 0;
+        el.play();
+      }
+    }
+
+    function speakWord(text) {
+      window.speechSynthesis.cancel(); // Dừng bất kỳ speech đang phát
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-US";
+      window.speechSynthesis.speak(u);
+    }
+
 
   </script>
 </body>
